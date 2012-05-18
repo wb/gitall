@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+import optparse
+import os
+import sys
+
+def main():
+	
+	# usage string
+	usage = 'usage: gitall [options] command'
+	
+	# set up the options
+	p = optparse.OptionParser(usage=usage)
+	p.add_option('-d', '--directory', dest='directory', default=os.getcwd(), help='Specify the parent directory. Omit to use current directory.')
+	options, arguments = p.parse_args()
+	
+	# command check
+	if len(arguments) < 1:
+		sys.exit(usage)
+	
+	command = 'git ' + ' '.join(arguments)
+	printDelimiter()
+	print 'Running command:', command
+	
+	# get a list of git directories in the specified parent
+	gitDirectories = getSubdirectories(options.directory, isGitDirectory)
+	
+	for gitDirectory in gitDirectories:
+		os.chdir(gitDirectory)
+		printDelimiter()
+		print 'Current respository location:', os.getcwd()
+		os.system(command)
+	
+	printDelimiter()
+
+	
+def getSubdirectories(directory, filter = None):
+	directory = os.path.abspath(directory)
+	subdirectories = os.walk(directory).next()[1]
+	if filter is None:
+		return [directory + '/' + i for i in subdirectories]
+	else:
+		return [directory + '/' + i for i in subdirectories if filter(directory + '/' + i)]
+		
+def printDelimiter():
+	print '\033[91m'
+	print ('#' * 80)
+	print '\033[0m'
+	
+def isGitDirectory(directory):
+	return os.path.isdir(directory + '/.git/')
+	
+if __name__ == "__main__":
+	main()
