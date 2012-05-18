@@ -1,7 +1,7 @@
 
 #GitAll
 
-Easily run git in multiple subdirectories.
+Easily run git commands in multiple subdirectories.
 
 ##How to use GitAll
 
