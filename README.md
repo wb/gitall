@@ -16,16 +16,16 @@ Easily run git commands in multiple subdirectories.
 
 ##Installing GitAll
 
-My personal preference is to create a symbolic link between `gitall.py` and
+My personal preference is to create a symbolic link between `gitall` and
 `/usr/bin/gitall`. This way, the command is accessible to all users of the
 computer, but still remains within the repository for easy updates. An example
 of how to do this follows:
 
     // make the command executable
-    $ chmod +x gitall.py
+    $ chmod +x gitall
     
     // create the symbolic link (cannot be a relative path)
-    $ sudo ln -s <full path to this repository>/gitall.py /usr/bin/gitall
+    $ sudo ln -s <full path to this repository>/gitall /usr/bin/gitall
 
 ##Sample Output
 
@@ -51,7 +51,7 @@ of how to do this follows:
 	#   (use "git add <file>..." to include in what will be committed)
 	#
 	#	README.md
-	#	gitall.py
+	#	gitall
 	nothing added to commit but untracked files present (use "git add" to track)
 	
 	################################################################################
