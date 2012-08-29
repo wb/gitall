@@ -5,14 +5,7 @@ Easily run git commands in multiple subdirectories.
 
 ##How to use GitAll
 
-    Usage: gitall [options] command
-
-    Options:
-      -h, --help            show this help message and exit
-      -d DIRECTORY, --directory=DIRECTORY
-                        Specify the parent directory. Omit to use current
-                        directory.
-
+    Usage: gitall command
 
 ##Installing GitAll
 
@@ -23,25 +16,27 @@ of how to do this follows:
 
     // make the command executable
     $ chmod +x gitall
-    
+
     // create the symbolic link (cannot be a relative path)
     $ sudo ln -s <full path to this repository>/gitall /usr/bin/gitall
 
 ##Sample Output
 
+Run the command `gitall status` and see the following output:
+
 
 	################################################################################
-	
+
 	Running command: git status
-	
+
 	################################################################################
-	
+
 	Current respository location: /Users/Walter/GitHub/color
 	# On branch master
 	nothing to commit (working directory clean)
-	
+
 	################################################################################
-	
+
 	Current respository location: /Users/Walter/GitHub/gitall
 	# On branch master
 	#
@@ -53,7 +48,7 @@ of how to do this follows:
 	#	README.md
 	#	gitall
 	nothing added to commit but untracked files present (use "git add" to track)
-	
+
 	################################################################################
 
 
