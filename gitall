@@ -15,6 +15,8 @@ def main():
 	command = 'git ' + ' '.join(sys.argv[1:])
 	printDelimiter()
 	print 'Running command:', command
+	localDir = os.path.abspath('.')
+	print 'gitall started in: ',localDir
 
 	# get a list of git directories in the specified parent
 	gitDirectories = getSubdirectories('.', isGitDirectory)
@@ -22,7 +24,7 @@ def main():
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
 		printDelimiter()
-		print 'Current respository location:', os.getcwd()
+		print 'Current repo:\033[95m', os.path.relpath(gitDirectory, localDir), '\033[0m'
 		os.system(command)
 
 	printDelimiter()
