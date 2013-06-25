@@ -22,22 +22,22 @@ of how to do this follows:
 
 ##Sample Output
 
-Run the command `gitall status` and see the following output:
+Run the command `gitall status` and see the following output: (if you have a colour terminal, the output is coloured for better readability)
 
 
 	################################################################################
 
 	Running command: git status
-
+	gitall started in:  /Users/Walter/GitHub
 	################################################################################
 
-	Current respository location: /Users/Walter/GitHub/color
+	Current repo: color
 	# On branch master
 	nothing to commit (working directory clean)
 
 	################################################################################
 
-	Current respository location: /Users/Walter/GitHub/gitall
+	Current repo: gitall
 	# On branch master
 	#
 	# Initial commit
