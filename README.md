@@ -1,4 +1,3 @@
-
 #GitAll
 
 Easily run git commands in multiple subdirectories.
@@ -26,17 +25,13 @@ Run the command `gitall status` and see the following output: (if you have a col
 
 
 	################################################################################
-
 	Running command: git status
 	gitall started in:  /Users/Walter/GitHub
 	################################################################################
-
 	Current repo: color
 	# On branch master
 	nothing to commit (working directory clean)
-
 	################################################################################
-
 	Current repo: gitall
 	# On branch master
 	#
@@ -48,7 +43,6 @@ Run the command `gitall status` and see the following output: (if you have a col
 	#	README.md
 	#	gitall
 	nothing added to commit but untracked files present (use "git add" to track)
-
 	################################################################################
 
 
