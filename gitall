@@ -2,32 +2,33 @@
 
 import os
 import sys
-
+import argparse
 def main():
+	parser = argparse.ArgumentParser(description="Perform a git command on multiple git repositories in subfolders")
+	parser.add_argument('--oneline', action='store_true')
+	parser.add_argument('--noseparator', '-n', dest='sep', action='store_false', default=True)
+	parser.add_argument("-q", "--quiet", help="decrease output verbosity", action="count", default=0)
+	parser.add_argument("command", metavar='command', type=str, help="The git command to perform on each repository", nargs=argparse.REMAINDER)
+ 	args = parser.parse_args()
 
-	# usage string
-	usage = 'usage: gitall command'
-
-	# command check
-	if len(sys.argv) < 2:
-		sys.exit(usage)
-
-	command = 'git ' + ' '.join(sys.argv[1:])
-	printDelimiter()
-	print 'Running command:', command
+	command = 'git ' + ' '.join(args.command)
+	if args.quiet==0:
+		printDelimiter(args.sep)
+		print 'Running command:', command
 	localDir = os.path.abspath('.')
-	print 'gitall started in: ',localDir
+	if args.quiet==0:
+		print 'gitall started in: ',localDir
+		printDelimiter(args.sep)
 
 	# get a list of git directories in the specified parent
 	gitDirectories = getSubdirectories('.', isGitDirectory)
 
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
-		printDelimiter()
 		print 'Current repo:\033[95m', os.path.relpath(gitDirectory, localDir), '\033[0m'
 		os.system(command)
+		printDelimiter(args.sep)
 
-	printDelimiter()
 
 def getSubdirectories(directory, filter = None):
 	directory = os.path.abspath(directory)
@@ -40,9 +41,10 @@ def getSubdirectories(directory, filter = None):
 def isGitDirectory(directory):
 	return os.path.isdir(directory + '/.git/')
 
-def printDelimiter():
-	hashes = '#' * 80
-	print '\033[91m', hashes, '\033[0m'
+def printDelimiter(sep):
+	if sep:
+		hashes = '#' * 80
+		print '\033[91m', hashes, '\033[0m'
 
 if __name__ == '__main__':
 	main()
