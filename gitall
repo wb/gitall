@@ -5,16 +5,18 @@ import sys
 import argparse
 def main():
 	parser = argparse.ArgumentParser(description="Perform a git command on multiple git repositories in subfolders")
-	parser.add_argument('--oneline', action='store_true')
-	parser.add_argument('--noseparator', '-n', dest='sep', action='store_false', default=True)
+	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True)
 	parser.add_argument("-q", "--quiet", help="decrease output verbosity", action="count", default=0)
 	parser.add_argument("command", metavar='command', type=str, help="The git command to perform on each repository", nargs=argparse.REMAINDER)
  	args = parser.parse_args()
+	#args = vars(parser.parse_args())
+	if not any(args.command):
+	    parser.error('No arguments provided.')
 
-	command = 'git ' + ' '.join(args.command)
+	gitcommand = 'git ' + ' '.join(args.command)
 	if args.quiet==0:
 		printDelimiter(args.sep)
-		print 'Running command:', command
+		print 'Running command:', gitcommand
 	localDir = os.path.abspath('.')
 	if args.quiet==0:
 		print 'gitall started in: ',localDir
@@ -26,7 +28,7 @@ def main():
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
 		print 'Current repo:\033[95m', os.path.relpath(gitDirectory, localDir), '\033[0m'
-		os.system(command)
+		os.system(gitcommand)
 		printDelimiter(args.sep)
 
 
