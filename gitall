@@ -43,10 +43,10 @@ def getSubdirectories(directory, filter = None):
 def isGitDirectory(directory):
 	return os.path.isdir(directory + '/.git/')
 
-def printDelimiter(sep):
-	if sep:
-		hashes = '#' * 80
-		print '\033[91m', hashes, '\033[0m'
+def printDelimiter(show):
+	if show:
+		dashes = '-' * 80
+		print '\033[91m' + dashes + '\033[0m'
 
 if __name__ == '__main__':
 	main()
