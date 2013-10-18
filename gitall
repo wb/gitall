@@ -8,11 +8,18 @@ DASH_COLOR = '\033[91m'
 COLOR_STOP = '\033[0m'
 
 def main():
-	parser = argparse.ArgumentParser(description="Perform a git command on multiple git repositories in subfolders")
-	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True)
-	parser.add_argument("-q", "--quiet", help="decrease output verbosity", action="count", default=0)
-	parser.add_argument("-v", "--verbose", help="increase output verbosity", action="count", default=0)
-	parser.add_argument("command", metavar='command', type=str, help="The git command to perform on each repository", nargs=argparse.REMAINDER)
+	# Command argument parsing
+	parser = argparse.ArgumentParser(
+		description="Perform a git command on multiple git repositories in subfolders",
+		epilog="NOTE: --quiet and --verbose cancel out each other. e.g. '-qqv' = '-q'")
+	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True, 
+		help='Suppress printing of separator line between repositories.')
+	parser.add_argument('-q', '--quiet', action="count", default=0, 
+		help="decrease output verbosity. Repeat for more silence, or to cancel out -v")
+	parser.add_argument('-v', '--verbose', action="count", default=0, 
+		help="increase output verbosity. Repeat for more noise, or to cancel out -q")
+	parser.add_argument('command', metavar='command', type=str, nargs=argparse.REMAINDER, 
+		help="The git command to perform on each repository. I.e. the part usually put after 'git'")
  	args = parser.parse_args()
 	verbosity = 0 - args.quiet + args.verbose
 	#args = vars(parser.parse_args())
