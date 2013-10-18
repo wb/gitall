@@ -21,37 +21,18 @@ def main():
 	parser.add_argument('command', metavar='command', type=str, nargs=argparse.REMAINDER, 
 		help="The git command to perform on each repository. I.e. the part usually put after 'git'")
  	args = parser.parse_args()
-	verbosity = 0 - args.quiet + args.verbose
-	#args = vars(parser.parse_args())
 	if not any(args.command):
 	    parser.error('No arguments provided.')
 
+	# handle verbosity
+	global verbosity
+	verbosity = 0 - args.quiet + args.verbose
+
+	#header printing
 	gitcommand = 'git ' + ' '.join(args.command)
-
-	if verbosity>=0:
-	    def _verboseprint(*args):
-	    	for arg in args:
-	    		print arg,
-	    	print
-	else:   
-	 	 _verboseprint = lambda *a: None
-
-	global verboseprint
-	verboseprint = _verboseprint
-
-	if verbosity>=0:
-	    def v(txt):
-	    	return txt
-	else:   
-	    def v(txt):
-	    	return ''
-
-	printDelimiter(args.quiet==0 and args.sep)
-
-	verboseprint('Running command:', gitcommand)
-
 	localDir = os.path.abspath('.')
-	verboseprint('gitall started in: ',localDir)
+	verboseprint(1, 'Running command:', gitcommand)
+	verboseprint(1, 'gitall started in: ',localDir)
 	printDelimiter(args.quiet==0 and args.sep)
 
 	# get a list of git directories in the specified parent
@@ -59,16 +40,22 @@ def main():
 
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
-		if verbosity < -1:
-			None
-		elif verbosity < 0:
-			print '['+pinkrepo+']'
-		else: 
-			print 'Current repo:',pinkrepo
 		pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
+		verboseprint(-1, v(1, 'Current repo: ')+ pinkrepo)
 		os.system(gitcommand)
 		printDelimiter(verbosity >=0 and args.sep)
 
+def verboseprint(fromlevel, *args):
+	if verbosity >= fromlevel:
+		for arg in args:
+			print arg,
+		print
+
+def v(fromlevel, *args):
+	if verbosity >= fromlevel:
+		return args
+	else:
+		return ''
 
 def getSubdirectories(directory, filter = None):
 	directory = os.path.abspath(directory)
