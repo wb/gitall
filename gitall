@@ -3,8 +3,9 @@
 import os
 import sys
 import argparse
-REPO_COLOR_START = '\033[95m'
-REPO_COLOR_STOP = '\033[0m'
+REPO_COLOR = '\033[95m'
+DASH_COLOR = '\033[91m'
+COLOR_STOP = '\033[0m'
 
 def main():
 	parser = argparse.ArgumentParser(description="Perform a git command on multiple git repositories in subfolders")
@@ -51,13 +52,13 @@ def main():
 
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
-		pinkrepo = REPO_COLOR_START + os.path.relpath(gitDirectory, localDir) + REPO_COLOR_STOP
 		if verbosity < -1:
 			None
 		elif verbosity < 0:
 			print '['+pinkrepo+']'
 		else: 
 			print 'Current repo:',pinkrepo
+		pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
 		os.system(gitcommand)
 		printDelimiter(verbosity >=0 and args.sep)
 
@@ -76,7 +77,7 @@ def isGitDirectory(directory):
 def printDelimiter(show):
 	if show:
 		dashes = '-' * 80
-		print '\033[91m' + dashes + '\033[0m'
+		print DASH_COLOR + dashes + COLOR_STOP
 
 if __name__ == '__main__':
 	main()
