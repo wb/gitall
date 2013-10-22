@@ -27,6 +27,8 @@ def main():
 	# handle verbosity
 	global verbosity
 	verbosity = 0 - args.quiet + args.verbose
+	if verbosity<-4:
+		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
 
 	#header printing
 	gitcommand = 'git ' + ' '.join(args.command)
@@ -41,7 +43,8 @@ def main():
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
 		pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
-		verboseprint(-1, v(1, 'Current repo: ')+ pinkrepo)
+		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
+		verboseprint(-1, *repooutput)
 		os.system(gitcommand)
 		printDelimiter(verbosity >=0 and args.sep)
 
@@ -55,7 +58,7 @@ def v(fromlevel, *args):
 	if verbosity >= fromlevel:
 		return args
 	else:
-		return ''
+		return ()
 
 def getSubdirectories(directory, filter = None):
 	directory = os.path.abspath(directory)
@@ -69,8 +72,11 @@ def isGitDirectory(directory):
 	return os.path.isdir(directory + '/.git/')
 
 def printDelimiter(show):
+	dash = '-'
+	if verbosity > 2:
+		dash = "#"
 	if show:
-		dashes = '-' * 80
+		dashes = dash * 80
 		print DASH_COLOR + dashes + COLOR_STOP
 
 if __name__ == '__main__':
