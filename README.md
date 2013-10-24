@@ -65,4 +65,4 @@ Running without the --verbose, reduces unneccesary output clutter (the first 2 s
 
 ##Disclaimer
 
-Be careful! There are no checks currently in place, so whatever git commands you pass in will be executed in all git repositories in the current or specified directory!
+Be careful! There are no checks currently in place, so whatever git commands you pass in will be executed in all git repositories below the current directory!
