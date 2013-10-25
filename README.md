@@ -19,6 +19,8 @@ Easily run git commands in multiple subdirectories.
 	                     cancel out -v
 	  -v, --verbose      increase output verbosity. Repeat for more noise, or to
 	                     cancel out -q
+	  -r, --raw          Treat the specified command as a 'full' command, i.e. not
+    	                 a git 'sub'-command. E.g. gitall --raw cat .gitignore
 
 	NOTE: --quiet and --verbose cancel out each other. e.g. '-qqv' = '-q'
 

@@ -18,6 +18,8 @@ def main():
 		help="decrease output verbosity. Repeat for more silence, or to cancel out -v")
 	parser.add_argument('-v', '--verbose', action="count", default=0, 
 		help="increase output verbosity. Repeat for more noise, or to cancel out -q")
+	parser.add_argument('-r', '--raw', action="store_true", 
+		help="Treat the specified command as a 'full' command, i.e. not a git 'sub'-command. E.g. gitall --raw cat .gitignore")
 	parser.add_argument('command', metavar='command', type=str, nargs=argparse.REMAINDER, 
 		help="The git command to perform on each repository. I.e. the part usually put after 'git'")
  	args = parser.parse_args()
@@ -31,9 +33,11 @@ def main():
 		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
 
 	#header printing
-	gitcommand = 'git ' + ' '.join(args.command)
+	commandstring = ' '.join(args.command)
+	if not args.raw:
+		commandstring = 'git ' +  commandstring
 	localDir = os.path.abspath('.')
-	verboseprint(1, 'Running command:', gitcommand)
+	verboseprint(1, 'Running command:', commandstring)
 	verboseprint(1, 'gitall started in: ',localDir)
 	printDelimiter(args.quiet==0 and args.sep)
 
@@ -45,7 +49,7 @@ def main():
 		pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
 		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
 		verboseprint(-1, *repooutput)
-		os.system(gitcommand)
+		os.system(commandstring)
 		printDelimiter(verbosity >=0 and args.sep)
 
 def verboseprint(fromlevel, *args):
