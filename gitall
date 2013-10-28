@@ -10,8 +10,8 @@ COLOR_STOP = '\033[0m'
 def main():
 	# Command argument parsing
 	parser = argparse.ArgumentParser(
-		description="Perform a git command on multiple git repositories in subfolders",
-		epilog="NOTE: --quiet and --verbose cancel out each other. e.g. '-qqv' = '-q'")
+		description="Perform a git operation on multiple git repositories in subfolders",
+		epilog="NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives the same result as '-q'")
 	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True, 
 		help='Suppress printing of separator line between repositories.')
 	parser.add_argument('-q', '--quiet', action="count", default=0, 
@@ -19,11 +19,11 @@ def main():
 	parser.add_argument('-v', '--verbose', action="count", default=0, 
 		help="increase output verbosity. Repeat for more noise, or to cancel out -q")
 	parser.add_argument('-r', '--raw', action="store_true", 
-		help="Treat the specified command as a 'full' command, i.e. not a git 'sub'-command. E.g. gitall --raw cat .gitignore")
-	parser.add_argument('command', metavar='command', type=str, nargs=argparse.REMAINDER, 
-		help="The git command to perform on each repository. I.e. the part usually put after 'git'")
+		help="Treat the specified command as a 'full' command, i.e. not a git 'sub'-command. Example: gitall --raw cat .gitignore")
+	parser.add_argument('operation', metavar='operation', type=str, nargs=argparse.REMAINDER, 
+		help="The git operation to perform on each repository, i.e. the part usually put after 'git '. (unless running in --raw mode)")
  	args = parser.parse_args()
-	if not any(args.command):
+	if not any(args.operation):
 	    parser.error('No arguments provided.')
 
 	# handle verbosity
@@ -33,7 +33,7 @@ def main():
 		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
 
 	#header printing
-	commandstring = ' '.join(args.command)
+	commandstring = ' '.join(args.operation)
 	if not args.raw:
 		commandstring = 'git ' +  commandstring
 	localDir = os.path.abspath('.')
