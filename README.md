@@ -13,14 +13,15 @@ Easily run git commands in multiple subdirectories.
 	                     part usually put after 'git'
 
 	optional arguments:
-	  -h, --help         show this help message and exit
-	  -n, --noseparator  Suppress printing of separator line between repositories.
-	  -q, --quiet        decrease output verbosity. Repeat for more silence, or to
-	                     cancel out -v
-	  -v, --verbose      increase output verbosity. Repeat for more noise, or to
-	                     cancel out -q
-	  -r, --raw          Treat the specified command as a 'full' command, i.e. not
-    	                 a git 'sub'-command. E.g. gitall --raw cat .gitignore
+	  -h, --help                      show this help message and exit
+	  -i <file>, --include <file>     Read repositories to operate on from <file>.
+	  -n, --noseparator               Suppress printing of separator line between repositories.
+	  -q, --quiet                     decrease output verbosity. Repeat for more silence, or to
+	                                  cancel out -v
+	  -v, --verbose                   increase output verbosity. Repeat for more noise, or to
+	                                  cancel out -q
+	  -r, --raw                       Treat the specified command as a 'full' command, i.e. not
+    	                              a git 'sub'-command. E.g. gitall --raw cat .gitignore
 
 	NOTE: --quiet and --verbose cancel out each other. e.g. '-qqv' = '-q'
 

@@ -13,7 +13,7 @@ def main():
 		description="Perform a git operation on multiple git repositories in subfolders",
 		epilog="NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives the same result as '-q'")
 	parser.add_argument('-i', '--include', metavar='include', type=str,
-		help='Only operate on repositories listed in <file>.')
+		help='Read repositories to operate on from <file>.')
 	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True, 
 		help='Suppress printing of separator line between repositories.')
 	parser.add_argument('-q', '--quiet', action="count", default=0, 
