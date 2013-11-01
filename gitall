@@ -12,19 +12,19 @@ def main():
 	parser = argparse.ArgumentParser(
 		description="Perform a git operation on multiple git repositories in subfolders",
 		epilog="NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives the same result as '-q'")
-	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True, 
+	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True,
 		help='Suppress printing of separator line between repositories.')
-	parser.add_argument('-q', '--quiet', action="count", default=0, 
+	parser.add_argument('-q', '--quiet', action="count", default=0,
 		help="decrease output verbosity. Repeat for more silence, or to cancel out -v")
-	parser.add_argument('-v', '--verbose', action="count", default=0, 
+	parser.add_argument('-v', '--verbose', action="count", default=0,
 		help="increase output verbosity. Repeat for more noise, or to cancel out -q")
-	parser.add_argument('-r', '--raw', action="store_true", 
+	parser.add_argument('-r', '--raw', action="store_true",
 		help="Treat the specified command as a 'full' command, i.e. not a git 'sub'-command. Example: gitall --raw cat .gitignore")
-	parser.add_argument('operation', metavar='operation', type=str, nargs=argparse.REMAINDER, 
+	parser.add_argument('operation', metavar='operation', type=str, nargs=argparse.REMAINDER,
 		help="The git operation to perform on each repository, i.e. the part usually put after 'git '. (unless running in --raw mode)")
- 	args = parser.parse_args()
+	args = parser.parse_args()
 	if not any(args.operation):
-	    parser.error('No arguments provided.')
+		parser.error('No arguments provided.')
 
 	# handle verbosity
 	global verbosity
