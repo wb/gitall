@@ -97,7 +97,7 @@ def printDelimiter(show):
 		dashes = dash * 80
 		if os.name == 'nt':
 			print dashes
-    	else:
+		else:
 			print DASH_COLOR + dashes + COLOR_STOP
 
 if __name__ == '__main__':
