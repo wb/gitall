@@ -4,7 +4,7 @@ Easily run git commands in multiple subdirectories.
 
 ##How to use GitAll
 
-    usage: gitall [-h] [-Ï <file>] [-n] [-q] [-v] command
+    usage: gitall [-h] [-I <includefile>] [-n] [-q] [-v] command
 
     Perform a git command on multiple git repositories in subfolders
 

@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+
 REPO_COLOR = '\033[95m'
 DASH_COLOR = '\033[91m'
 COLOR_STOP = '\033[0m'
@@ -51,7 +52,10 @@ def main():
 
 	for gitDirectory in gitDirectories:
 		os.chdir(gitDirectory)
-		pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
+		if os.name == 'nt':
+			pinkrepo = os.path.relpath(gitDirectory, localDir)
+		else:
+			pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
 		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
 		verboseprint(-1, *repooutput)
 		os.system(commandstring)
@@ -91,7 +95,10 @@ def printDelimiter(show):
 		dash = "#"
 	if show:
 		dashes = dash * 80
-		print DASH_COLOR + dashes + COLOR_STOP
+		if os.name == 'nt':
+			print dashes
+		else:
+			print DASH_COLOR + dashes + COLOR_STOP
 
 if __name__ == '__main__':
 	main()
