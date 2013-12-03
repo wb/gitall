@@ -17,6 +17,12 @@ Easily run git commands in multiple subdirectories.
       -h, --help            show this help message and exit
       -I <includefile>, --include-from <includefile>
                             Read repositories to operate on from specified file.
+      -i include, --include include
+                            Specify comma-separated list of repositories to use.
+                            Suppresses automatic repo detection
+      -e exclude, --exclude exclude
+                            Specify comma-separated list of repositories to
+                            exclude. Applied after auto-detect or include(-file)
       -n, --noseparator     Suppress printing of separator line between
                             repositories.
       -q, --quiet           decrease output verbosity. Repeat for more silence, or
