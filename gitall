@@ -15,6 +15,10 @@ def main():
 		epilog="NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives the same result as '-q'")
 	parser.add_argument('-I', '--include-from', metavar='includefile', dest='includefile', type=str,
 		help='Read repositories to operate on from specified file.')
+	parser.add_argument('-i', '--include', metavar='include', dest='include', type=str,
+		help='Specify comma-separated list of repositories to use. Suppresses automatic repo detection')
+	parser.add_argument('-e', '--exclude', metavar='exclude', dest='exclude', type=str,
+		help="Specify comma-separated list of repositories to exclude. Applied after auto-detect or include(-file)")
 	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True,
 		help='Suppress printing of separator line between repositories.')
 	parser.add_argument('-q', '--quiet', action="count", default=0,
@@ -44,22 +48,37 @@ def main():
 	verboseprint(1, 'gitall started in: ',localDir)
 	printDelimiter(args.quiet==0 and args.sep)
 
-	# get a list of git directories in the specified parent
-	if not args.includefile:
-		gitDirectories = getSubdirectories('.', isGitDirectory)
-	else:
-		gitDirectories = getReposFromFile(args.includefile)
+	gitDirectories = set()
+	if (not args.includefile and not args.include):
+		# get a list of git directories in the specified parent
+		gitDirectories.update(get_subdirectories('.', isGitDirectory))
+	if args.includefile:
+		# get list of git directories from specified include file (-I)
+		fileinc = get_repos_from_include_file(args.includefile)
+		gitDirectories.update(fileinc)
+	if args.include:
+		# get list of git directories from list specified on command line (-i)
+		cmdinc = convert_commasep_to_list(args.include)
+		gitDirectories.update(cmdinc)
+
+	if args.exclude:
+		# remove any repositories specified as exclude on command line (-e)
+		gitDirectories -= set(convert_commasep_to_list(args.exclude))
 
 	for gitDirectory in gitDirectories:
-		os.chdir(gitDirectory)
+		fullDir = localDir + "/" + gitDirectory
+		os.chdir(fullDir)
 		if os.name == 'nt':
-			pinkrepo = os.path.relpath(gitDirectory, localDir)
+			pinkrepo = os.path.relpath(fullDir, localDir)
 		else:
-			pinkrepo = REPO_COLOR + os.path.relpath(gitDirectory, localDir) + COLOR_STOP
+			pinkrepo = REPO_COLOR + os.path.relpath(fullDir, localDir) + COLOR_STOP
 		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
 		verboseprint(-1, *repooutput)
 		os.system(commandstring)
 		printDelimiter(verbosity >=0 and args.sep)
+
+def convert_commasep_to_list(include):
+	return include.split(',')
 
 def verboseprint(fromlevel, *args):
 	if verbosity >= fromlevel:
@@ -73,18 +92,16 @@ def v(fromlevel, *args):
 	else:
 		return ()
 
-def getReposFromFile(file):
-	gitDirectories = ""
-	directory = os.path.abspath(".")
-	return [directory + "/" + gitRepo.rstrip("\r\n") for gitRepo in open(file, 'r')]
+def get_repos_from_include_file(file):
+	return [gitRepo.rstrip("\r\n") for gitRepo in open(file, 'r')]
 
-def getSubdirectories(directory, filter = None):
+def get_subdirectories(directory, filter = None):
 	directory = os.path.abspath(directory)
 	subdirectories = os.walk(directory).next()[1]
 	if filter is None:
-		return [directory + '/' + i for i in subdirectories]
+		return [i for i in subdirectories]
 	else:
-		return [directory + '/' + i for i in subdirectories if filter(directory + '/' + i)]
+		return [i for i in subdirectories if filter(directory + '/' + i)]
 
 def isGitDirectory(directory):
 	return os.path.isdir(directory + '/.git/')
