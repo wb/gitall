@@ -49,6 +49,13 @@ of how to do this follows:
     // create the symbolic link (cannot be a relative path)
     $ sudo ln -s <full path to this repository>/gitall /usr/bin/gitall
 
+If you get the message `env: python2: No such file or directory` when trying to
+run gitall, your Python install is broken (this the default on Mac OS X). Either
+make a [fresh install](https://www.python.org/downloads/) of Python 2, or do this:
+
+    // workaround: symlink python2 to python
+    $ sudo ln -s $(which python){,2}
+
 ##Sample Output
 
 Run the command `gitall --verbose status` and see the following output: (if you have a colour terminal, the output is coloured for better readability)
