@@ -4,9 +4,11 @@ Easily run git commands across all your repositories.
 
 ##How to use GitAll
 
-    usage: gitall [-h] [-I <includefile>] [-n] [-q] [-v] command
+    usage: gitall [-h] [-I includefile] [-i include] [-e exclude] [-d date] [-n]
+                  [-q] [-v] [-r]
+                  ...
 
-    Perform a git command on multiple git repositories in subfolders
+    Perform a git operation on multiple git repositories in subfolders
 
     positional arguments:
       operation             The git operation to perform on each repository, i.e.
@@ -15,7 +17,7 @@ Easily run git commands across all your repositories.
 
     optional arguments:
       -h, --help            show this help message and exit
-      -I <includefile>, --include-from <includefile>
+      -I includefile, --include-from includefile
                             Read repositories to operate on from specified file.
       -i include, --include include
                             Specify comma-separated list of repositories to use.
@@ -23,6 +25,10 @@ Easily run git commands across all your repositories.
       -e exclude, --exclude exclude
                             Specify comma-separated list of repositories to
                             exclude. Applied after auto-detect or include(-file)
+      -d date, --date date  Specify checkout by date instead of ref. This
+                            parameter must be used with gitall checkout <branch>.
+                            The date format is YYYY-MM-DD HH:MM:SS or a shorter
+                            format. See also the date format used by git rev-list
       -n, --noseparator     Suppress printing of separator line between
                             repositories.
       -q, --quiet           decrease output verbosity. Repeat for more silence, or
@@ -33,7 +39,8 @@ Easily run git commands across all your repositories.
                             not a git 'sub'-command. Example: gitall --raw cat
                             .gitignore
 
-    NOTE: --quiet and --verbose cancel out each other. e.g. '-qqv' = '-q'
+    NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives
+    the same result as '-q'
 
 ##Installing GitAll
 

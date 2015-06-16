@@ -3,6 +3,9 @@
 import os
 import sys
 import argparse
+import re
+import subprocess
+
 
 REPO_COLOR = '\033[95m'
 DASH_COLOR = '\033[91m'
@@ -19,6 +22,8 @@ def main():
 		help='Specify comma-separated list of repositories to use. Suppresses automatic repo detection')
 	parser.add_argument('-e', '--exclude', metavar='exclude', dest='exclude', type=str,
 		help="Specify comma-separated list of repositories to exclude. Applied after auto-detect or include(-file)")
+	parser.add_argument('-d', '--date', metavar='date', dest='date', type=str,
+		help="Specify checkout by date instead of ref. This parameter must be used with gitall checkout <branch>. The date format is YYYY-MM-DD HH:MM:SS or a shorter format. See also the date format used by git rev-list")
 	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True,
 		help='Suppress printing of separator line between repositories.')
 	parser.add_argument('-q', '--quiet', action="count", default=0,
@@ -74,7 +79,29 @@ def main():
 			pinkrepo = REPO_COLOR + os.path.relpath(fullDir, localDir) + COLOR_STOP
 		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
 		verboseprint(-1, *repooutput)
-		os.system(commandstring)
+		#if date is specified, then use git rev-list to get the sha from the date
+		if args.date:
+			regex = re.compile('\w+')
+			match = regex.findall(commandstring)
+			command = match[1]
+			#check if a branch was specified
+			try:
+				branch = match[2]
+			except IndexError:
+				sys.exit("--date must be used with git checkout <branch>")
+			#check if the command was git checkout
+			if ( not command == 'checkout'):
+				sys.exit("--date must be used with git checkout <branch>")
+			else:
+				#use git rev-list to get most recent sha hash before specified date
+				revparameters = ["git","rev-list", "-1", "--before="+args.date, branch]
+				revcommand = subprocess.Popen(revparameters, stdout=subprocess.PIPE)
+				(sha, err) = revcommand.communicate()
+				#construct a new datecommandstring (as the commandstring will be parsed in the loop for other repositories)
+				datecommandstring = "git "+command +" "+sha
+			os.system(datecommandstring)
+		else:
+			os.system(commandstring)
 		printDelimiter(verbosity >=0 and args.sep)
 
 def convert_commasep_to_list(include):
