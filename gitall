@@ -12,6 +12,8 @@ DASH_COLOR = '\033[91m'
 COLOR_STOP = '\033[0m'
 
 def main():
+	os.system('') #For some reason this fixes a rarely occuring problem with displaying colors
+	
 	# Command argument parsing
 	parser = argparse.ArgumentParser(
 		description="Perform a git operation on multiple git repositories in subfolders",
