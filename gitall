@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -42,7 +42,7 @@ def main():
 	global verbosity
 	verbosity = 0 - args.quiet + args.verbose
 	if verbosity<-4:
-		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
+		print('If you want it THAT quiet, just pipe everything to /dev/null and be done with it!')
 
 	#header printing
 	commandstring = ' '.join(args.operation)
@@ -110,8 +110,8 @@ def convert_commasep_to_list(include):
 def verboseprint(fromlevel, *args):
 	if verbosity >= fromlevel:
 		for arg in args:
-			print arg,
-		print
+			print(arg)
+		print()
 
 def v(fromlevel, *args):
 	if verbosity >= fromlevel:
@@ -124,7 +124,7 @@ def get_repos_from_include_file(file):
 
 def get_subdirectories(directory, filter = None):
 	directory = os.path.abspath(directory)
-	subdirectories = os.walk(directory).next()[1]
+	subdirectories = next(os.walk(directory))[1]
 	if filter is None:
 		return [i for i in subdirectories]
 	else:
@@ -140,9 +140,9 @@ def printDelimiter(show):
 	if show:
 		dashes = dash * 80
 		if os.name == 'nt':
-			print dashes
+			print(dashes)
 		else:
-			print DASH_COLOR + dashes + COLOR_STOP
+			print(DASH_COLOR + dashes + COLOR_STOP)
 
 if __name__ == '__main__':
 	main()
