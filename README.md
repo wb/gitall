@@ -1,8 +1,8 @@
-#GitAll
+# GitAll
 
 Easily run git commands across all your repositories.
 
-##How to use GitAll
+## How to use GitAll
 
     usage: gitall [-h] [-I includefile] [-i include] [-e exclude] [-d date] [-n]
                   [-q] [-v] [-r]
@@ -42,7 +42,7 @@ Easily run git commands across all your repositories.
     NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives
     the same result as '-q'
 
-##Installing GitAll
+## Installing GitAll
 
 My personal preference is to clone the git repo and then create a symbolic in
 `/usr/bin/gitall` pointing to the cloned `gitall`.
@@ -63,7 +63,7 @@ make a [fresh install](https://www.python.org/downloads/) of Python 2, or do thi
     // workaround: symlink python2 to python
     $ sudo ln -s $(which python){,2}
 
-##Sample Output
+## Sample Output
 
 Run the command `gitall --verbose status` and see the following output: (if you have a colour terminal, the output is coloured for better readability)
 
@@ -90,6 +90,6 @@ Run the command `gitall --verbose status` and see the following output: (if you 
 
 Running without the --verbose, reduces unneccesary output clutter (the first 2 status lines and "Current repo:"), and adding one or more --quiet (or e.g. -q, -qq) reduces noise even further.
 
-##Disclaimer
+## Disclaimer
 
 Be careful! There are no checks currently in place, so whatever git commands you pass in will be executed in all git repositories below the current directory!
