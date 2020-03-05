@@ -47,12 +47,14 @@ def main():
 		print ("If you want it THAT quiet, just pipe everything to /dev/null and be done with it!")
 
 	#header printing
-	commandstring = ' '.join(args.operation)
+        operation = handleOperationsWithSpaces(args.operation)
+	commandstring = ' '.join(operation)
 	if not args.raw:
 		commandstring = 'git ' +  commandstring
 	localDir = os.path.abspath('.')
 	verboseprint(1, 'Running command:', commandstring)
 	verboseprint(1, 'gitall started in: ',localDir)
+        verboseprint(1, 'unjoined operation', args.operation)
 	printDelimiter(args.quiet==0 and args.sep)
 
 	gitDirectories = set()
@@ -139,6 +141,15 @@ def printDelimiter(show):
 	if show:
 		dashes = dash * 80
 		print DASH_COLOR + dashes + COLOR_STOP
+
+def handleOperationsWithSpaces(operations):
+        result = []
+        for op in operations:
+                if (' ' in op):
+                        result.append("'" + op + "'")
+                else:
+                        result.append(op)
+        return result
 
 if __name__ == '__main__':
 	main()
