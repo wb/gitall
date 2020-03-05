@@ -13,7 +13,7 @@ COLOR_STOP = '\033[0m'
 
 def main():
 	os.system('') #For some reason this fixes a rarely occuring problem with displaying colors
-	
+
 	# Command argument parsing
 	parser = argparse.ArgumentParser(
 		description="Perform a git operation on multiple git repositories in subfolders",
@@ -146,7 +146,7 @@ def handleOperationsWithSpaces(operations):
         result = []
         for op in operations:
                 if (' ' in op):
-                        result.append("'" + op + "'")
+                        result.append("\"" + op + "\"")
                 else:
                         result.append(op)
         return result
