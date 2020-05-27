@@ -12,6 +12,8 @@ DASH_COLOR = '\033[91m'
 COLOR_STOP = '\033[0m'
 
 def main():
+	os.system('') #For some reason this fixes a rarely occuring problem with displaying colors
+
 	# Command argument parsing
 	parser = argparse.ArgumentParser(
 		description="Perform a git operation on multiple git repositories in subfolders",
@@ -42,15 +44,17 @@ def main():
 	global verbosity
 	verbosity = 0 - args.quiet + args.verbose
 	if verbosity<-4:
-		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
+		print ("If you want it THAT quiet, just pipe everything to /dev/null and be done with it!")
 
 	#header printing
-	commandstring = ' '.join(args.operation)
+        operation = handleOperationsWithSpaces(args.operation)
+	commandstring = ' '.join(operation)
 	if not args.raw:
 		commandstring = 'git ' +  commandstring
 	localDir = os.path.abspath('.')
 	verboseprint(1, 'Running command:', commandstring)
 	verboseprint(1, 'gitall started in: ',localDir)
+        verboseprint(1, 'unjoined operation', args.operation)
 	printDelimiter(args.quiet==0 and args.sep)
 
 	gitDirectories = set()
@@ -73,10 +77,7 @@ def main():
 	for gitDirectory in gitDirectories:
 		fullDir = localDir + "/" + gitDirectory
 		os.chdir(fullDir)
-		if os.name == 'nt':
-			pinkrepo = os.path.relpath(fullDir, localDir)
-		else:
-			pinkrepo = REPO_COLOR + os.path.relpath(fullDir, localDir) + COLOR_STOP
+		pinkrepo = REPO_COLOR + os.path.relpath(fullDir, localDir) + COLOR_STOP
 		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
 		verboseprint(-1, *repooutput)
 		#if date is specified, then use git rev-list to get the sha from the date
@@ -110,7 +111,7 @@ def convert_commasep_to_list(include):
 def verboseprint(fromlevel, *args):
 	if verbosity >= fromlevel:
 		for arg in args:
-			print arg,
+			print (arg)
 		print
 
 def v(fromlevel, *args):
@@ -131,7 +132,7 @@ def get_subdirectories(directory, filter = None):
 		return [i for i in subdirectories if filter(directory + '/' + i)]
 
 def isGitDirectory(directory):
-	return os.path.isdir(directory + '/.git/')
+	return os.path.isdir(directory + '/.git/') or os.path.isfile(directory + '/.git')
 
 def printDelimiter(show):
 	dash = '-'
@@ -139,10 +140,16 @@ def printDelimiter(show):
 		dash = "#"
 	if show:
 		dashes = dash * 80
-		if os.name == 'nt':
-			print dashes
-		else:
-			print DASH_COLOR + dashes + COLOR_STOP
+		print DASH_COLOR + dashes + COLOR_STOP
+
+def handleOperationsWithSpaces(operations):
+        result = []
+        for op in operations:
+                if (' ' in op):
+                        result.append("\"" + op + "\"")
+                else:
+                        result.append(op)
+        return result
 
 if __name__ == '__main__':
 	main()
