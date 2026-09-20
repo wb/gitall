@@ -1,148 +1,296 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-import os
-import sys
+"""Run one command across the Git repositories in a directory."""
+
+from __future__ import annotations
+
 import argparse
-import re
+import os
+from pathlib import Path
+import shlex
 import subprocess
+import sys
+from typing import Iterable, Optional, Sequence, TextIO
 
 
-REPO_COLOR = '\033[95m'
-DASH_COLOR = '\033[91m'
-COLOR_STOP = '\033[0m'
+REPO_COLOR = "\033[95m"
+DASH_COLOR = "\033[91m"
+COLOR_STOP = "\033[0m"
 
-def main():
-	# Command argument parsing
-	parser = argparse.ArgumentParser(
-		description="Perform a git operation on multiple git repositories in subfolders",
-		epilog="NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives the same result as '-q'")
-	parser.add_argument('-I', '--include-from', metavar='includefile', dest='includefile', type=str,
-		help='Read repositories to operate on from specified file.')
-	parser.add_argument('-i', '--include', metavar='include', dest='include', type=str,
-		help='Specify comma-separated list of repositories to use. Suppresses automatic repo detection')
-	parser.add_argument('-e', '--exclude', metavar='exclude', dest='exclude', type=str,
-		help="Specify comma-separated list of repositories to exclude. Applied after auto-detect or include(-file)")
-	parser.add_argument('-d', '--date', metavar='date', dest='date', type=str,
-		help="Specify checkout by date instead of ref. This parameter must be used with gitall checkout <branch>. The date format is YYYY-MM-DD HH:MM:SS or a shorter format. See also the date format used by git rev-list")
-	parser.add_argument('-n', '--noseparator', dest='sep', action='store_false', default=True,
-		help='Suppress printing of separator line between repositories.')
-	parser.add_argument('-q', '--quiet', action="count", default=0,
-		help="decrease output verbosity. Repeat for more silence, or to cancel out -v")
-	parser.add_argument('-v', '--verbose', action="count", default=0,
-		help="increase output verbosity. Repeat for more noise, or to cancel out -q")
-	parser.add_argument('-r', '--raw', action="store_true",
-		help="Treat the specified command as a 'full' command, i.e. not a git 'sub'-command. Example: gitall --raw cat .gitignore")
-	parser.add_argument('operation', metavar='operation', type=str, nargs=argparse.REMAINDER,
-		help="The git operation to perform on each repository, i.e. the part usually put after 'git '. (unless running in --raw mode)")
-	args = parser.parse_args()
-	if not any(args.operation):
-		parser.error('No arguments provided.')
 
-	# handle verbosity
-	global verbosity
-	verbosity = 0 - args.quiet + args.verbose
-	if verbosity<-4:
-		print "If you want it THAT quiet, just pipe everything to /dev/null and be done with it!"
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run a Git command in multiple repositories beneath a directory.",
+        epilog=(
+            "Commands run in repository-name order. Use --raw to run a non-Git "
+            "command without implicit shell interpretation."
+        ),
+    )
+    parser.add_argument(
+        "-I",
+        "--include-from",
+        metavar="FILE",
+        type=Path,
+        help="read repository paths from FILE, one per line",
+    )
+    parser.add_argument(
+        "-i",
+        "--include",
+        metavar="REPOS",
+        help="include comma-separated repository paths instead of auto-detection",
+    )
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        metavar="REPOS",
+        help="exclude comma-separated repository paths",
+    )
+    parser.add_argument(
+        "-d",
+        "--date",
+        metavar="DATE",
+        help="with 'checkout BRANCH', check out its latest commit before DATE",
+    )
+    parser.add_argument(
+        "-n",
+        "--no-separator",
+        dest="separator",
+        action="store_false",
+        help="do not print separator lines",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="count",
+        default=0,
+        help="reduce output; repeat for more silence",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="increase output; repeat for more detail",
+    )
+    parser.add_argument(
+        "-r",
+        "--raw",
+        action="store_true",
+        help="run the operation directly instead of prefixing it with 'git'",
+    )
+    parser.add_argument(
+        "operation",
+        metavar="COMMAND",
+        nargs=argparse.REMAINDER,
+        help="the Git subcommand and arguments, or a complete command with --raw",
+    )
+    return parser
 
-	#header printing
-	commandstring = ' '.join(args.operation)
-	if not args.raw:
-		commandstring = 'git ' +  commandstring
-	localDir = os.path.abspath('.')
-	verboseprint(1, 'Running command:', commandstring)
-	verboseprint(1, 'gitall started in: ',localDir)
-	printDelimiter(args.quiet==0 and args.sep)
 
-	gitDirectories = set()
-	if (not args.includefile and not args.include):
-		# get a list of git directories in the specified parent
-		gitDirectories.update(get_subdirectories('.', isGitDirectory))
-	if args.includefile:
-		# get list of git directories from specified include file (-I)
-		fileinc = get_repos_from_include_file(args.includefile)
-		gitDirectories.update(fileinc)
-	if args.include:
-		# get list of git directories from list specified on command line (-i)
-		cmdinc = convert_commasep_to_list(args.include)
-		gitDirectories.update(cmdinc)
+def comma_separated(value: Optional[str]) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
 
-	if args.exclude:
-		# remove any repositories specified as exclude on command line (-e)
-		gitDirectories -= set(convert_commasep_to_list(args.exclude))
 
-	for gitDirectory in gitDirectories:
-		fullDir = localDir + "/" + gitDirectory
-		os.chdir(fullDir)
-		if os.name == 'nt':
-			pinkrepo = os.path.relpath(fullDir, localDir)
-		else:
-			pinkrepo = REPO_COLOR + os.path.relpath(fullDir, localDir) + COLOR_STOP
-		repooutput = v(1, 'Current repo:') + (pinkrepo,) + v(2," in ( "+os.path.abspath('.')+" )")
-		verboseprint(-1, *repooutput)
-		#if date is specified, then use git rev-list to get the sha from the date
-		if args.date:
-			regex = re.compile('\w+')
-			match = regex.findall(commandstring)
-			command = match[1]
-			#check if a branch was specified
-			try:
-				branch = match[2]
-			except IndexError:
-				sys.exit("--date must be used with git checkout <branch>")
-			#check if the command was git checkout
-			if ( not command == 'checkout'):
-				sys.exit("--date must be used with git checkout <branch>")
-			else:
-				#use git rev-list to get most recent sha hash before specified date
-				revparameters = ["git","rev-list", "-1", "--before="+args.date, branch]
-				revcommand = subprocess.Popen(revparameters, stdout=subprocess.PIPE)
-				(sha, err) = revcommand.communicate()
-				#construct a new datecommandstring (as the commandstring will be parsed in the loop for other repositories)
-				datecommandstring = "git "+command +" "+sha
-			os.system(datecommandstring)
-		else:
-			os.system(commandstring)
-		printDelimiter(verbosity >=0 and args.sep)
+def repositories_from_file(path: Path) -> list[str]:
+    with path.open(encoding="utf-8") as repository_file:
+        return [line.rstrip("\r\n") for line in repository_file if line.rstrip("\r\n")]
 
-def convert_commasep_to_list(include):
-	return include.split(',')
 
-def verboseprint(fromlevel, *args):
-	if verbosity >= fromlevel:
-		for arg in args:
-			print arg,
-		print
+def is_git_repository(path: Path) -> bool:
+    git_marker = path / ".git"
+    return git_marker.is_dir() or git_marker.is_file()
 
-def v(fromlevel, *args):
-	if verbosity >= fromlevel:
-		return args
-	else:
-		return ()
 
-def get_repos_from_include_file(file):
-	return [gitRepo.rstrip("\r\n") for gitRepo in open(file, 'r')]
+def repository_path(root: Path, name: str) -> Path:
+    relative_path = Path(name)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise ValueError(f"repository path must stay beneath the starting directory: {name}")
 
-def get_subdirectories(directory, filter = None):
-	directory = os.path.abspath(directory)
-	subdirectories = os.walk(directory).next()[1]
-	if filter is None:
-		return [i for i in subdirectories]
-	else:
-		return [i for i in subdirectories if filter(directory + '/' + i)]
+    candidate = root / relative_path
+    try:
+        resolved_candidate = candidate.resolve()
+        resolved_root = root.resolve()
+    except RuntimeError as error:
+        raise ValueError(f"unable to resolve repository path: {name}") from error
 
-def isGitDirectory(directory):
-	return os.path.isdir(directory + '/.git/')
+    try:
+        resolved_candidate.relative_to(resolved_root)
+    except ValueError as error:
+        raise ValueError(
+            f"repository path resolves outside the starting directory: {name}"
+        ) from error
+    return candidate
 
-def printDelimiter(show):
-	dash = '-'
-	if verbosity > 2:
-		dash = "#"
-	if show:
-		dashes = dash * 80
-		if os.name == 'nt':
-			print dashes
-		else:
-			print DASH_COLOR + dashes + COLOR_STOP
 
-if __name__ == '__main__':
-	main()
+def select_repositories(root: Path, args: argparse.Namespace) -> list[Path]:
+    names: set[str] = set()
+
+    if not args.include and not args.include_from:
+        names.update(
+            child.name
+            for child in root.iterdir()
+            if child.is_dir() and is_git_repository(child)
+        )
+
+    if args.include_from:
+        names.update(repositories_from_file(args.include_from))
+
+    names.update(comma_separated(args.include))
+    names.difference_update(comma_separated(args.exclude))
+
+    repositories_by_location: dict[Path, Path] = {}
+    for name in sorted(names, key=lambda value: (value.casefold(), value)):
+        repository = repository_path(root, name)
+        repositories_by_location.setdefault(repository.resolve(), repository)
+
+    return sorted(
+        repositories_by_location.values(),
+        key=lambda path: (str(path).casefold(), str(path)),
+    )
+
+
+def color_enabled(stream: TextIO) -> bool:
+    return "NO_COLOR" not in os.environ and hasattr(stream, "isatty") and stream.isatty()
+
+
+def colored(text: str, color: str, stream: TextIO) -> str:
+    if color_enabled(stream):
+        return f"{color}{text}{COLOR_STOP}"
+    return text
+
+
+def print_separator(show: bool, verbosity: int, stream: TextIO) -> None:
+    if not show:
+        return
+    character = "#" if verbosity > 2 else "-"
+    print(colored(character * 80, DASH_COLOR, stream), file=stream)
+
+
+def display_command(command: Sequence[str]) -> str:
+    if os.name == "nt":
+        return subprocess.list2cmdline(command)
+    return shlex.join(command)
+
+
+def run_command(command: Sequence[str], repository: Path) -> int:
+    try:
+        return subprocess.run(command, cwd=repository, check=False).returncode
+    except OSError as error:
+        print(
+            f"gitall: unable to run {command[0]!r} in {repository}: {error}",
+            file=sys.stderr,
+        )
+        return 127 if isinstance(error, FileNotFoundError) else 126
+
+
+def commit_before(repository: Path, branch: str, date: str) -> tuple[Optional[str], int]:
+    try:
+        result = subprocess.run(
+            ["git", "rev-list", "-1", f"--before={date}", branch],
+            cwd=repository,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as error:
+        print(f"gitall: unable to inspect {repository}: {error}", file=sys.stderr)
+        return None, 127 if isinstance(error, FileNotFoundError) else 126
+    if result.returncode:
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr)
+        return None, result.returncode
+
+    commit = result.stdout.strip()
+    if not commit:
+        print(
+            f"gitall: no commit found before {date!r} on branch {branch!r}",
+            file=sys.stderr,
+        )
+        return None, 1
+    return commit, 0
+
+
+def validate_date_operation(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
+    if not args.date:
+        return
+    if args.raw or len(args.operation) != 2 or args.operation[0] != "checkout":
+        parser.error("--date must be used with exactly: checkout BRANCH")
+
+
+def repository_label(root: Path, repository: Path) -> str:
+    return str(repository.relative_to(root))
+
+
+def report_failures(root: Path, failures: Iterable[tuple[Path, int]]) -> None:
+    failures = list(failures)
+    if not failures:
+        return
+    print("\nFailed repositories:", file=sys.stderr)
+    for repository, returncode in failures:
+        print(
+            f"  {repository_label(root, repository)}: exit {returncode}",
+            file=sys.stderr,
+        )
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not args.operation:
+        parser.error("no command provided")
+    validate_date_operation(parser, args)
+
+    verbosity = args.verbose - args.quiet
+    root = Path.cwd()
+
+    try:
+        repositories = select_repositories(root, args)
+    except (OSError, UnicodeError, ValueError) as error:
+        parser.error(str(error))
+
+    base_command = list(args.operation) if args.raw else ["git", *args.operation]
+    if verbosity >= 1:
+        print(f"Running command: {display_command(base_command)}")
+        print(f"gitall started in: {root}")
+
+    if not repositories:
+        if verbosity >= -1:
+            print("No Git repositories found.")
+        return 0
+
+    failures: list[tuple[Path, int]] = []
+    print_separator(args.separator and verbosity >= 0, verbosity, sys.stdout)
+
+    for repository in repositories:
+        if verbosity >= -1:
+            label = repository_label(root, repository)
+            if verbosity >= 2:
+                label = f"{label} ({repository})"
+            print(colored(label, REPO_COLOR, sys.stdout), flush=True)
+
+        if not is_git_repository(repository):
+            print(f"gitall: not a Git repository: {repository}", file=sys.stderr)
+            returncode = 2
+        elif args.date:
+            commit, returncode = commit_before(
+                repository, args.operation[1], args.date
+            )
+            if commit:
+                returncode = run_command(["git", "checkout", commit], repository)
+        else:
+            returncode = run_command(base_command, repository)
+
+        if returncode:
+            failures.append((repository, returncode))
+        print_separator(args.separator and verbosity >= 0, verbosity, sys.stdout)
+
+    report_failures(root, failures)
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

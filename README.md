@@ -1,95 +1,103 @@
-#GitAll
+# GitAll
 
-Easily run git commands across all your repositories.
+Run one command across the Git repositories directly beneath a directory.
 
-##How to use GitAll
+GitAll is intentionally small: it discovers repositories, runs the requested
+command in stable name order, and reports any failures. It has no dependencies
+beyond Python 3.9 or newer and Git.
 
-    usage: gitall [-h] [-I includefile] [-i include] [-e exclude] [-d date] [-n]
-                  [-q] [-v] [-r]
-                  ...
+## Usage
 
-    Perform a git operation on multiple git repositories in subfolders
+Run a Git command in every repository beneath the current directory:
 
-    positional arguments:
-      operation             The git operation to perform on each repository, i.e.
-                            the part usually put after 'git '. (unless running in
-                            --raw mode)
+```console
+$ gitall status --short
+alpha
+beta
+```
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -I includefile, --include-from includefile
-                            Read repositories to operate on from specified file.
-      -i include, --include include
-                            Specify comma-separated list of repositories to use.
-                            Suppresses automatic repo detection
-      -e exclude, --exclude exclude
-                            Specify comma-separated list of repositories to
-                            exclude. Applied after auto-detect or include(-file)
-      -d date, --date date  Specify checkout by date instead of ref. This
-                            parameter must be used with gitall checkout <branch>.
-                            The date format is YYYY-MM-DD HH:MM:SS or a shorter
-                            format. See also the date format used by git rev-list
-      -n, --noseparator     Suppress printing of separator line between
-                            repositories.
-      -q, --quiet           decrease output verbosity. Repeat for more silence, or
-                            to cancel out -v
-      -v, --verbose         increase output verbosity. Repeat for more noise, or
-                            to cancel out -q
-      -r, --raw             Treat the specified command as a 'full' command, i.e.
-                            not a git 'sub'-command. Example: gitall --raw cat
-                            .gitignore
+Arguments are passed to Git exactly as provided, including spaces and shell
+metacharacters:
 
-    NOTE: --quiet and --verbose cancel each other out one by one so '-qqv' gives
-    the same result as '-q'
+```console
+$ gitall commit -m "Document the release"
+```
 
-##Installing GitAll
+Select or exclude repositories:
 
-My personal preference is to clone the git repo and then create a symbolic in
-`/usr/bin/gitall` pointing to the cloned `gitall`.
-This way, the command is accessible to all users of the
-computer, but still remains within the repository for easy updates. An example
-of how to do this follows:
+```console
+$ gitall --include api,website status
+$ gitall --exclude archived,prototype fetch --prune
+$ gitall --include-from repositories.txt status
+```
 
-    // make the command executable
-    $ chmod +x gitall
+`--include-from` accepts one repository path per line. Explicit paths are
+resolved relative to the directory where GitAll starts and may not be absolute,
+traverse through `..`, or resolve through a symlink to somewhere outside that
+directory.
 
-    // create the symbolic link (cannot be a relative path)
-    $ sudo ln -s <full path to this repository>/gitall /usr/bin/gitall
+Run a non-Git command with `--raw`:
 
-If you get the message `env: python2: No such file or directory` when trying to
-run gitall, your Python install is broken (this the default on Mac OS X). Either
-make a [fresh install](https://www.python.org/downloads/) of Python 2, or do this:
+```console
+$ gitall --raw python3 -m unittest
+```
 
-    // workaround: symlink python2 to python
-    $ sudo ln -s $(which python){,2}
+Raw commands are executed directly, without an implicit shell. If shell syntax
+is genuinely required, invoke a shell explicitly:
 
-##Sample Output
+```console
+$ gitall --raw sh -c 'git branch --show-current | sed "s/^/branch: /"'
+```
 
-Run the command `gitall --verbose status` and see the following output: (if you have a colour terminal, the output is coloured for better readability)
+Check out the latest commit on a branch before a given date:
 
+```console
+$ gitall --date 2024-01-01 checkout main
+```
 
-    Running command: git status
-    gitall started in:  /Users/Walter/GitHub
-    --------------------------------------------------------------------------------
-    Current repo: color
-    # On branch master
-    nothing to commit (working directory clean)
-    --------------------------------------------------------------------------------
-    Current repo: gitall
-    # On branch master
-    #
-    # Initial commit
-    #
-    # Untracked files:
-    #   (use "git add <file>..." to include in what will be committed)
-    #
-    #   README.md
-    #   gitall
-    nothing added to commit but untracked files present (use "git add" to track)
-    --------------------------------------------------------------------------------
+This leaves each repository in a detached-HEAD state at the selected commit.
 
-Running without the --verbose, reduces unneccesary output clutter (the first 2 status lines and "Current repo:"), and adding one or more --quiet (or e.g. -q, -qq) reduces noise even further.
+Run `gitall --help` for all options.
 
-##Disclaimer
+## Output and failures
 
-Be careful! There are no checks currently in place, so whatever git commands you pass in will be executed in all git repositories below the current directory!
+Repositories are processed alphabetically. GitAll continues after an individual
+command fails, prints a summary of failed repositories, and exits with status 1
+if any command failed.
+
+Use `--quiet` repeatedly to reduce GitAll's headings and separators, or
+`--verbose` to show the command and starting directory. Set `NO_COLOR` to disable
+GitAll's own terminal colors.
+
+## Installation
+
+Clone the repository, then link the executable into a user-owned directory on
+your `PATH`:
+
+```sh
+git clone https://github.com/wb/gitall.git
+mkdir -p ~/.local/bin
+ln -s "$(pwd)/gitall/gitall" ~/.local/bin/gitall
+```
+
+Alternatively, copy the `gitall` file anywhere on your `PATH`. It must remain
+executable.
+
+## Safety
+
+GitAll can run destructive Git or system commands across many repositories.
+It does not ask for confirmation, so review the command and selected repositories
+before running it.
+Shell interpretation occurs only when you explicitly invoke a shell.
+
+## Development
+
+Run the dependency-free test suite with:
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+## License
+
+GitAll is available under the [MIT License](LICENSE).
